@@ -1,0 +1,376 @@
+{
+  "info": {
+    "name": "SkillSync AI - Job Matching Engine",
+    "description": "Complete API collection for testing the job matching engine with embeddings and AI explanations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"name\": \"John Doe\",\n  \"gender\": \"male\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('access_token', jsonData.data.accessToken);",
+                  "    pm.environment.set('user_id', jsonData.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💼 Jobs Management",
+      "item": [
+        {
+          "name": "1. Create Job - Senior Backend Engineer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Backend Engineer\",\n  \"description\": \"We are looking for an experienced Senior Backend Engineer with strong expertise in Node.js, Express, and database design. You should have 5+ years of experience building scalable backend systems, experience with Prisma ORM, MySQL databases, and RESTful API design. Knowledge of microservices architecture and AWS is a plus. You will work on our core backend infrastructure that powers our AI-driven job matching platform.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Create Job - React Frontend Developer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"React Frontend Developer\",\n  \"description\": \"Seeking a talented React Frontend Developer to build beautiful, responsive user interfaces. Required: 3+ years React experience, TypeScript, Next.js, Tailwind CSS. You should be comfortable with state management (Redux, Context API), REST APIs, and modern frontend best practices. Experience with performance optimization and unit testing with Jest is preferred. Join our team to build the future of AI-powered job matching!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Create Job - Full Stack Developer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Full Stack Developer\",\n  \"description\": \"We need a versatile Full Stack Developer who can work seamlessly across the entire tech stack. Required: Node.js backend development, React frontend skills, understanding of databases (MySQL/PostgreSQL), and REST APIs. You should be comfortable with both server-side and client-side development. Experience with Docker, CI/CD pipelines, and cloud platforms is a bonus. Ideal candidate has 2+ years of full stack experience.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Create Job - DevOps Engineer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"DevOps Engineer\",\n  \"description\": \"Looking for a DevOps Engineer to manage and optimize our infrastructure. Required: Docker, Kubernetes, AWS/GCP, CI/CD pipelines. You will be responsible for deployment automation, monitoring, and maintaining our cloud infrastructure. Experience with Terraform, Jenkins, and Linux system administration is essential. Must have 3+ years of DevOps experience and strong problem-solving skills.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Create Job - Machine Learning Engineer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Machine Learning Engineer\",\n  \"description\": \"Join our AI team as a Machine Learning Engineer. You will work on our embedding models and matching algorithms. Required: Strong Python skills, deep learning framework experience (TensorFlow/PyTorch), understanding of NLP and embeddings. You should have 2+ years of ML engineering experience, knowledge of model deployment and optimization. Bachelor's in Computer Science or related field preferred. This role involves building the brain of our job matching system!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 Resume Management",
+      "item": [
+        {
+          "name": "1. Upload Resume (PDF/DOCX)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('resume_id', jsonData.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume",
+                  "description": "Upload your resume PDF or DOCX file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/resumes/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "resumes",
+                "upload"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 Job Matching Engine",
+      "item": [
+        {
+          "name": "1. Get Job Matches (Top 5 with AI Explanations)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topN\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "matches"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Get Top 3 Matches",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topN\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "matches"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resume_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

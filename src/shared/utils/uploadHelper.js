@@ -14,9 +14,11 @@ const ensureDirectoryExists = (dirPath) => {
 // Create upload directories
 const uploadsDir = path.join(__dirname, "..", "..", "uploads");
 const profileDir = path.join(uploadsDir, "profile");
+const resumesDir = path.join(uploadsDir, "resumes");
 
 ensureDirectoryExists(uploadsDir);
 ensureDirectoryExists(profileDir);
+ensureDirectoryExists(resumesDir);
 
 // File filter - images only
 const imageFilter = (req, file, cb) => {
@@ -31,6 +33,24 @@ const imageFilter = (req, file, cb) => {
   } else {
     return cb(
       new Error("Only JPG, JPEG, PNG, and WEBP files are allowed"),
+      false
+    );
+  }
+};
+
+// File filter - resume files (PDF and DOCX)
+const resumeFilter = (req, file, cb) => {
+  const allowedTypes = /pdf|docx|msword/;
+  const extname = /pdf|docx/.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = /pdf|docx|msword/.test(file.mimetype);
+
+  if ((mimetype || extname) && extname) {
+    return cb(null, true);
+  } else {
+    return cb(
+      new Error("Only PDF and DOCX files are allowed"),
       false
     );
   }
@@ -112,7 +132,30 @@ const profileImageUpload = multer({
   fileFilter: imageFilter,
 }).single("profileImage");
 
+// Storage configuration for resumes
+const resumeStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, resumesDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      "resume-" + uniqueSuffix + path.extname(file.originalname).toLowerCase()
+    );
+  },
+});
+
+const resumeUpload = multer({
+  storage: resumeStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: resumeFilter,
+}).single("resume");
+
 // Export
 module.exports = {
   uploadProfileImage: handleMulterError(profileImageUpload),
+  uploadResume: handleMulterError(resumeUpload),
 };

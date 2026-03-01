@@ -5,6 +5,8 @@ const { verifyToken } = require('../services/tokenService');
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
+  console.log('🔐 Auth Middleware - Authorization header:', authHeader ? 'Present' : 'Missing');
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new AppError('Access token is required', 401));
   }
@@ -14,14 +16,10 @@ const authenticate = async (req, res, next) => {
   try {
     const decoded = verifyToken(token, 'access');
     req.user = decoded;
-    // const user= await prisma.user.findUnique({
-    //   where: { id: decoded.id },
-    // });
-    // if (!user || user.isDeleted) {
-    //   return next(new AppError('User not found', 404));
-    // }
+    console.log('✅ Auth Middleware - User set:', { id: decoded.userId, email: decoded.email });
     next();
   } catch (error) {
+    console.log('❌ Auth Middleware - Token verification failed:', error.message);
     next(error);
   }
 };

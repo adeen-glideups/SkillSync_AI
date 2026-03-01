@@ -9,6 +9,9 @@ const { errorHandler, notFoundHandler } = require('./shared/middleware/errorHand
 
 // Import modules
 const authModule = require('./modules/auth');
+const jobsModule = require('./modules/jobs');
+const resumesModule = require('./modules/resumes');
+const matchesModule = require('./modules/matches');
 
 
 const app = express();
@@ -34,6 +37,9 @@ BigInt.prototype.toJSON = function () {
 
 // Mount modules
 app.use('/api/auth', authModule.router);
+app.use('/api/jobs', jobsModule.router);
+app.use('/api/resumes', resumesModule.router);
+app.use('/api/matches', matchesModule.router);
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(process.cwd(), 'src', 'uploads')));

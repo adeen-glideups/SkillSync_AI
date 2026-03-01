@@ -52,6 +52,8 @@ model User {
 
   loggedDevices  LoggedDevices[]
   otp            Otp[]
+  resumes        UserResume[]
+  matchResults   MatchResult[]
 
   @@unique([email])
 }
@@ -78,4 +80,50 @@ model Otp {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(255)
+  description  String    @db.LongText
+  embedding    Json      // 768-dimensional vector
+
+  matches      MatchResult[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model UserResume {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  fileName     String    @db.VarChar(255)
+  originalText String    @db.LongText
+  embedding    Json      // 768-dimensional vector
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches      MatchResult[]
+
+  uploadedAt   DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model MatchResult {
+  id               Int     @id @default(autoincrement())
+  userId           Int
+  resumeId         Int
+  jobId            Int
+  similarityScore  Float
+  explanation      String  @db.LongText
+
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume           UserResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  job              Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([resumeId])
+  @@index([jobId])
 }
