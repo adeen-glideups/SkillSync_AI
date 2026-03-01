@@ -1,0 +1,400 @@
+give me sample data this is my lat 24.9074765 long 67.0825716 i want u to give me setustore multi part data in which i can test all cases like give me 2 stores with in 5 km and 2 stores in 5 to 10 km and one far from 10 km according to my given cordinates and second case is operatingHours give me 2 resturants useing same timing and 2 different timgs open on some close on some days and remember give me open close time in form of seconds like i am testing them like 
+
+my some helper fuctions in exploreModel.js:
+// Get current time in seconds
+const getCurrentTimeInSeconds = () => {
+    const now = new Date();
+    return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+};
+
+// Get current day
+const getCurrentDay = () => {
+    const days = [
+        "SUNDAY",
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+    ];
+    return days[new Date().getDay()];
+};
+
+// Check if restaurant is open now
+const isRestaurantOpen = (operatingHours) => {
+    const currentDay = getCurrentDay();
+    const todayHours = operatingHours.find((hour) => hour.day === currentDay);
+
+    if (!todayHours || !todayHours.isOpen) {
+        return false;
+    }
+
+    if (!todayHours.openTime || !todayHours.closeTime) {
+        return true; // If no time specified, assume open all day
+    }
+
+    const currentTimeSeconds = getCurrentTimeInSeconds();
+    const [openHour, openMin] = todayHours.openTime.split(":").map(Number);
+    const [closeHour, closeMin] = todayHours.closeTime.split(":").map(Number);
+
+    const openTimeSeconds = openHour * 3600 + openMin * 60;
+    const closeTimeSeconds = closeHour * 3600 + closeMin * 60;
+
+    if (openTimeSeconds <= closeTimeSeconds) {
+        // Normal case (9AM → 5PM)
+        return (
+            currentTimeSeconds >= openTimeSeconds &&
+            currentTimeSeconds <= closeTimeSeconds
+        );
+    } else {
+        // Cross midnight case (10PM → 3AM)
+        return (
+            currentTimeSeconds >= openTimeSeconds ||
+            currentTimeSeconds <= closeTimeSeconds
+        );
+    }
+};
+
+
+my body for setup store u will give in this format :
+name:Electronics Store
+email:kfc1@gmail.com
+phone: +9477018000004
+description: Best pizza in town
+taxId: TAX-9000471
+buissnessLicenceId: BL-0000471
+address: No 45, Galle Road
+city: Colombo
+state: Western
+country: Sri Lanka
+latitude: 6.9271
+longitude: 79.8612
+label: Main Branch
+deliveryType: FREE
+//wholeWeekSameTime:true
+categoryIds:3
+operatingHours: [{"day":"MONDAY","isOpen":true,"openTime":"09:00","closeTime":"22:00"},{"day":"TUESDAY","isOpen":true,"openTime":"09:00","closeTime":"22:00"},{"day":"WEDNESDAY","isOpen":false},{"day":"THURSDAY","isOpen":false},{"day":"FRIDAY","isOpen":false},{"day":"SATURDAY","isOpen":false},{"day":"SUNDAY","isOpen":false}]
+//openTime:7:30 PM
+//closeTime:12:00 AM
+logo: <<image>>
+buissnessLicenseImg <<image>>
+images <<image>>
+video <<image>>
+
+my service function for ur clearance so u wont manke mistakes:
+/* ---------------------------
+   ✅ SETUP STORE (CREATE only)
+--------------------------- */
+const setupStore = async (userId, data, files) => {
+  // Check if user exists
+  const user = await authPartnerModel.findUserById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404, ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  if (user.userType !== "buissness") {
+    throw new AppError(
+      "Only business users can create store",
+      403,
+      ERROR_CODES.FORBIDDEN
+    );
+  }
+
+  // Extract fields
+  const {
+    name,
+    email,
+    phone,
+    description,
+    taxId,
+    buissnessLicenceId,
+    storeLocation,
+    country,
+    city,
+    state,
+    address,
+    latitude,
+    longitude,
+    instructions,
+    deliveryType,
+    deliveryTime,
+    categoryIds,
+    wholeWeekSameTime,
+    operatingHours,
+    openTime,
+    closeTime,
+  } = data;
+
+  // Validate required fields
+  if (!name || !email || !phone) {
+    throw new AppError(
+      "Name, email, and phone are required",
+      400,
+      ERROR_CODES.INVALID_INPUT
+    );
+  }
+
+  // Check store email uniqueness (globally)
+  if (email) {
+    const emailExists = await prisma.store.findFirst({ where: { email, isDeleted: false } });
+    if (emailExists) {
+      throw new AppError(
+        "Store email already exists",
+        409,
+        ERROR_CODES.STORE_EMAIL_EXISTS
+      );
+    }
+  }
+
+  // Check store phone uniqueness (globally)
+  if (phone) {
+    const phoneExists = await prisma.store.findFirst({ where: { phone, isDeleted: false } });
+    if (phoneExists) {
+      throw new AppError(
+        "Store phone already exists",
+        409,
+        ERROR_CODES.STORE_PHONE_EXISTS
+      );
+    }
+  }
+
+  // Check tax ID uniqueness (globally)
+  if (taxId) {
+    const taxExists = await prisma.store.findFirst({ where: { taxId, isDeleted: false } });
+    if (taxExists) {
+      throw new AppError(
+        "Tax ID already exists",
+        409,
+        ERROR_CODES.TAX_ID_EXISTS
+      );
+    }
+  }
+
+  // Check business license ID uniqueness (globally)
+  if (buissnessLicenceId) {
+    const licenseExists = await authPartnerModel.findStoreByBusinessLicenseId(
+      buissnessLicenceId
+    );
+    if (licenseExists) {
+      throw new AppError(
+        "Business License ID already exists",
+        409,
+        ERROR_CODES.BUSINESS_LICENSE_EXISTS
+      );
+    }
+  }
+
+  // Parse category IDs
+  let parsedCategoryIds = [];
+  if (categoryIds) {
+    if (Array.isArray(categoryIds)) {
+      parsedCategoryIds = categoryIds;
+    } else if (typeof categoryIds === "string") {
+      if (categoryIds.includes(",")) {
+        parsedCategoryIds = categoryIds.split(",").map((id) => id.trim());
+      } else {
+        try {
+          const parsed = JSON.parse(categoryIds);
+          // 🔥 FIX
+          parsedCategoryIds = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (err) {
+          // If not JSON, treat as single ID string
+          parsedCategoryIds = [categoryIds];
+        }
+      }
+    }
+
+    // Validate category IDs exist in database
+    if (parsedCategoryIds.length > 0) {
+      const foundCategories = await authPartnerModel.getStoreCategoriesById(parsedCategoryIds);
+
+      if (foundCategories.length !== parsedCategoryIds.length) {
+        const foundIds = foundCategories.map((c) => c.id);
+        const invalidIds = parsedCategoryIds
+          .map((id) => parseInt(id))
+          .filter((id) => !foundIds.includes(id));
+        throw new AppError(
+          `Invalid category IDs: ${invalidIds.join(", ")}. These categories do not exist.`,
+          400,
+          ERROR_CODES.INVALID_INPUT
+        );
+      }
+    }
+  }
+
+  // Parse operating hours (same logic as restaurant)
+  let parsedOperatingHours = [];
+  const useSameTimingBool = wholeWeekSameTime === "true" || wholeWeekSameTime === true;
+
+  if (useSameTimingBool) {
+    if (!openTime || !closeTime) {
+      throw new AppError(
+        "openTime and closeTime are required when wholeWeekSameTime is true",
+        400,
+        "INVALID_INPUT"
+      );
+    }
+
+    const allDays = [
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+      "SUNDAY",
+    ];
+
+    parsedOperatingHours = allDays.map((day) => ({
+      day,
+      isOpen: true,
+      openTime: openTime.trim(),
+      closeTime: closeTime.trim(),
+    }));
+  } else {
+    if (typeof operatingHours === "string") {
+      try {
+        parsedOperatingHours = JSON.parse(operatingHours);
+      } catch {
+        throw new AppError(
+          "Invalid operating hours format",
+          400,
+          "INVALID_INPUT"
+        );
+      }
+    } else if (Array.isArray(operatingHours)) {
+      parsedOperatingHours = operatingHours;
+    }
+
+    if (parsedOperatingHours.length !== 7) {
+      throw new AppError(
+        "All 7 days must be provided when wholeWeekSameTime is false",
+        400,
+        "INVALID_INPUT"
+      );
+    }
+  }
+
+  // Build store data
+  const storeData = {
+    userId,
+    name,
+    email,
+    phone,
+    description,
+    taxId,
+    buissnessLicenceId,
+    storeLocation,
+    deliveryType,
+    deliveryTime,
+    useSameTiming: useSameTimingBool,
+  };
+
+  // Handle address fields - validate and add directly to store
+  if (typeof address === "string" && address.trim()) {
+    storeData.address = address.trim();
+  }
+  if (typeof city === "string" && city.trim()) {
+    storeData.city = city.trim();
+  }
+  if (typeof state === "string" && state.trim()) {
+    storeData.state = state.trim();
+  }
+  if (typeof country === "string" && country.trim()) {
+    storeData.country = country.trim();
+  }
+  if (typeof latitude === "string" && latitude.trim()) {
+    storeData.latitude = latitude.trim();
+  }
+  if (typeof longitude === "string" && longitude.trim()) {
+    storeData.longitude = longitude.trim();
+  }
+  if (typeof instructions === "string" && instructions.trim()) {
+    storeData.instructions = instructions.trim();
+  }
+
+  // Handle logo
+  if (files?.logo?.[0]) {
+    storeData.logo = `${baseURL}/uploads/logo/${files.logo[0].filename}`;
+  }
+
+  // Handle business license image
+  if (files?.buissnessLicenseImg?.[0]) {
+    storeData.buissnessLicenseImg = `${baseURL}/uploads/license/${files.buissnessLicenseImg[0].filename}`;
+  }
+
+  // Handle store images (multiple)
+  if (files?.images && files.images.length > 0) {
+    storeData.images = files.images
+      .map((img) => `${baseURL}/uploads/restaurant/${img.filename}`)
+      .join(",");
+  }
+
+  // Handle video (single optional file)
+  if (files?.video?.[0]) {
+    storeData.video = `${baseURL}/uploads/videos/${files.video[0].filename}`;
+  }
+
+  // Create store
+  const store = await authPartnerModel.createStore(storeData);
+
+  // Create operating hours
+  if (parsedOperatingHours && parsedOperatingHours.length > 0) {
+    await authPartnerModel.upsertStoreOperatingHours(
+      store.id,
+      parsedOperatingHours
+    );
+  }
+
+  // Create store categories
+  if (parsedCategoryIds.length) {
+    const categoryIdNumbers = parsedCategoryIds.map((id) => Number(id));
+    await authPartnerModel.upsertStoreCategories(store.id, categoryIdNumbers);
+  }
+
+  // Fetch complete store data
+  const completeStore = await authPartnerModel.findStoreById(store.id);
+  const updatedUser = await authPartnerModel.findUserById(userId);
+
+  // Clean user data
+  const { passwordHash, ...safeUser } = updatedUser;
+
+  // Transform store categories
+  const { storeCategories, ...storeWithoutCategories } = completeStore;
+  const transformedStore = {
+    ...storeWithoutCategories,
+    images: storeWithoutCategories.images
+      ? storeWithoutCategories.images.split(",")
+      : [],
+    buissnessLicenseImg: storeWithoutCategories.buissnessLicenseImg
+      ? [storeWithoutCategories.buissnessLicenseImg]
+      : [],
+    categories: storeCategories?.map((sc) => ({
+      id: sc.category.id,
+      name: sc.category.name,
+    })) || [],
+  };
+  let parsedOwnerLicenseImg = null;
+
+  if (safeUser.OwnerLicenseImg) {
+    try {
+      parsedOwnerLicenseImg = JSON.parse(safeUser.OwnerLicenseImg);
+    } catch (err) {
+      parsedOwnerLicenseImg = null;
+    }
+  }
+
+  const responseData = {
+    ...safeUser,
+    OwnerLicenseImg: parsedOwnerLicenseImg,
+    store: transformedStore,
+  };
+
+  // Remove null/undefined
+  Object.keys(responseData).forEach(
+    (key) => responseData[key] == null && delete responseData[key]
+  );
+
+  return responseData;
+};
