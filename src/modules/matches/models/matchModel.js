@@ -1,6 +1,42 @@
 const { prisma } = require('../../../config/database');
 
 /**
+ * Get a resume by ID with all necessary fields for matching
+ * @param {number} resumeId - Resume ID
+ * @returns {Promise<object|null>} - Resume object or null if not found
+ */
+const getResumeById = async (resumeId) => {
+  return prisma.userResume.findFirst({
+    where: {
+      id: resumeId,
+    },
+    select: {
+      id: true,
+      userId: true,
+      fileName: true,
+      originalText: true,
+      embedding: true,
+      uploadedAt: true,
+    },
+  });
+};
+
+/**
+ * Get all available jobs for matching
+ * @returns {Promise<Array>} - Array of job objects with embeddings
+ */
+const getAllJobs = async () => {
+  return prisma.job.findMany({
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      embedding: true,
+    },
+  });
+};
+
+/**
  * Create a single match result
  * @param {object} data - Match result data
  * @returns {Promise<object>} - Created match result
@@ -34,6 +70,8 @@ const createMultipleMatchResults = async (results) => {
 };
 
 module.exports = {
+  getResumeById,
+  getAllJobs,
   createMatchResult,
   createMultipleMatchResults,
 };

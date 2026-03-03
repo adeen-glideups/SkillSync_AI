@@ -3,6 +3,27 @@ const {asyncHandler} = require('../../../shared/utils/asyncHandler');
 const AppError = require('../../../shared/middleware/errorHandler').AppError;
 
 /**
+ * Get all resumes for authenticated user
+ * GET /api/resumes
+ */
+const getUserResumes = asyncHandler(async (req, res, next) => {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    throw new AppError('User not authenticated', 401, 'UNAUTHORIZED');
+  }
+
+  // Get all resumes for user
+  const resumes = await resumeService.getUserResumes(userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Resumes retrieved successfully',
+    data: resumes,
+  });
+});
+
+/**
  * Upload a resume file
  * POST /api/resumes/upload
  */
@@ -28,5 +49,6 @@ const uploadResume = asyncHandler(async (req, res, next) => {
 });
 
 module.exports = {
+  getUserResumes,
   uploadResume,
 };

@@ -8,6 +8,16 @@ const router = express.Router();
 // Routes
 
 /**
+ * GET /api/resumes
+ * Get all resumes for the authenticated user
+ */
+router.get(
+  '/',
+  authenticate,
+  resumeController.getUserResumes
+);
+
+/**
  * POST /api/resumes/upload
  * Upload a resume file (PDF or DOCX) with auto-generated embedding
  */

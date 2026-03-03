@@ -5,6 +5,33 @@ const { generateEmbedding } = require('../../../shared/utils/embeddingService');
 const AppError = require('../../../shared/middleware/errorHandler').AppError;
 
 /**
+ * Get all resumes for a user
+ * @param {number} userId - User ID
+ * @returns {Promise<Array>} - Array of user's resumes
+ */
+const getUserResumes = async (userId) => {
+  if (!userId) {
+    throw new AppError('User ID is required', 400, 'REQUIRED_FIELDS_MISSING');
+  }
+
+  try {
+    const resumes = await resumeModel.getUserResumes(userId);
+
+    if (!resumes || resumes.length === 0) {
+      return [];
+    }
+
+    return resumes;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    console.error('Error fetching user resumes:', error);
+    throw new AppError('Failed to fetch resumes', 500, 'INTERNAL_SERVER_ERROR');
+  }
+};
+
+/**
  * Upload and process a resume file with auto-generated embedding
  * @param {number} userId - User ID
  * @param {object} file - Multer file object
@@ -60,5 +87,6 @@ const uploadResumeWithEmbedding = async (userId, file) => {
 };
 
 module.exports = {
+  getUserResumes,
   uploadResumeWithEmbedding,
 };

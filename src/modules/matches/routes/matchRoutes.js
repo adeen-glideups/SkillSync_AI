@@ -8,7 +8,16 @@ const router = express.Router();
 
 // Validation schemas
 const getMatchesSchema = Joi.object({
-  topN: Joi.number().integer().min(1).max(10).optional(),
+  resumeId: Joi.number().integer().positive().required().messages({
+    'number.base': 'resumeId must be a number',
+    'number.positive': 'resumeId must be a positive number',
+    'any.required': 'resumeId is required',
+  }),
+  topN: Joi.number().integer().min(1).max(10).optional().default(5).messages({
+    'number.base': 'topN must be a number',
+    'number.min': 'topN must be at least 1',
+    'number.max': 'topN cannot exceed 10',
+  }),
 });
 
 // Routes

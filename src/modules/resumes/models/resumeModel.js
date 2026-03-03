@@ -56,6 +56,25 @@ const deleteResumeById = async (resumeId) => {
 };
 
 /**
+ * Get all resumes for a user
+ * @param {number} userId - User ID
+ * @returns {Promise<Array>} - Array of resume objects
+ */
+const getUserResumes = async (userId) => {
+  return prisma.userResume.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      fileName: true,
+      uploadedAt: true,
+    },
+    orderBy: {
+      uploadedAt: 'desc',
+    },
+  });
+};
+
+/**
  * Delete all resumes for a user except the latest one
  * @param {number} userId - User ID
  * @returns {Promise<void>}
@@ -79,6 +98,7 @@ const deleteOldResumesByUserId = async (userId) => {
 
 module.exports = {
   createResume,
+  getUserResumes,
   getLatestResumeByUserId,
   deleteResumeById,
   deleteOldResumesByUserId,
