@@ -87,6 +87,11 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
 
     const rankedJobs = rankMatches(jobs, resumeEmbedding, topN);
 
+    // Define minimum match score threshold from LLM reranker
+    // Top matches from embeddings proceed to LLM verification
+    // LLM scores below 50/100 indicate poor fit (like content writer matching coding jobs)
+    const MATCH_SCORE_THRESHOLD = 0;
+
     if (!rankedJobs || rankedJobs.length === 0) {
       return {
         resumeId: resume.id,
@@ -94,11 +99,11 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
         uploadedAt: resume.uploadedAt,
         totalJobsAnalyzed: jobs.length,
         topMatches: [],
-        message: 'No jobs found with matching criteria',
+        message: 'We don\'t have any job that matches your profile right now. Your skills are better suited for a different career path.',
       };
     }
 
-    // Generate explanations for top matches
+    // Generate scores and explanations for top matches (Stage 2: Reranking)
     const topMatches = [];
     const matchesToSave = [];
 
@@ -106,41 +111,49 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
       const job = rankedJobs[i];
 
       try {
-        // Generate explanation using Gemini
-        const explanation = await generateExplanation(resume.originalText, {
+        // Use Groq as a reranker to verify and score the match
+        const scoreData = await generateExplanation(resume.originalText, {
           title: job.title,
           description: job.description,
         });
 
-        const matchData = {
-          rank: i + 1,
-          jobId: job.id,
-          jobTitle: job.title,
-          similarityScore: job.similarityScore,
-          explanation,
-        };
+        // Only include matches that pass the LLM threshold
+        if (scoreData.matchScore >= MATCH_SCORE_THRESHOLD) {
+          const matchData = {
+            rank: topMatches.length + 1,
+            jobId: job.id,
+            jobTitle: job.title,
+            matchScore: scoreData.matchScore, // Use LLM score instead of embedding similarity
+            explanation: scoreData.explanation,
+          };
 
-        topMatches.push(matchData);
+          topMatches.push(matchData);
 
-        // Prepare data for saving to database
-        matchesToSave.push({
-          userId,
-          resumeId: resume.id,
-          jobId: job.id,
-          similarityScore: job.similarityScore,
-          explanation,
-        });
+          // Prepare data for saving to database
+          matchesToSave.push({
+            userId,
+            resumeId: resume.id,
+            jobId: job.id,
+            similarityScore: scoreData.matchScore, // Store LLM score in DB
+            explanation: scoreData.explanation,
+          });
+        }
       } catch (error) {
-        console.error(`Error generating explanation for job ${job.id}:`, error);
+        console.error(`Error generating score for job ${job.id}:`, error);
         // Continue with remaining jobs even if one fails
-        topMatches.push({
-          rank: i + 1,
-          jobId: job.id,
-          jobTitle: job.title,
-          similarityScore: job.similarityScore,
-          explanation: 'Explanation could not be generated at this time',
-        });
       }
+    }
+
+    // If no matches passed the threshold, return friendly message
+    if (topMatches.length === 0) {
+      return {
+        resumeId: resume.id,
+        fileName: resume.fileName,
+        uploadedAt: resume.uploadedAt,
+        totalJobsAnalyzed: jobs.length,
+        topMatches: [],
+        message: 'We don\'t have any job that matches your profile right now. Your skills are better suited for a different career path.',
+      };
     }
 
     // Save match results to database
