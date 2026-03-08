@@ -45,7 +45,10 @@ const uploadResumeWithEmbedding = async (userId, file) => {
   if (!userId) {
     throw new AppError('User ID is required', 400, 'REQUIRED_FIELDS_MISSING');
   }
-
+  const user = await resumeModel.getUserById(userId);
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
   let resumeText = '';
 
   try {

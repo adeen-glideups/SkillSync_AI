@@ -90,7 +90,7 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
     // Define minimum match score threshold from LLM reranker
     // Top matches from embeddings proceed to LLM verification
     // LLM scores below 50/100 indicate poor fit (like content writer matching coding jobs)
-    const MATCH_SCORE_THRESHOLD = 0;
+    const MATCH_SCORE_THRESHOLD = 20;
 
     if (!rankedJobs || rankedJobs.length === 0) {
       return {

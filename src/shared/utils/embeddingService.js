@@ -1,4 +1,7 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const AppError = require('../middleware/errorHandler').AppError;
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
  * Generate embedding for given text using Voyage AI's voyage-3.5-lite model
@@ -10,35 +13,11 @@ const generateEmbedding = async (text) => {
     throw new AppError('Text cannot be empty for embedding generation', 400, 'INVALID_INPUT');
   }
 
-  if (!process.env.VoyageAPI_KEY) {
-    throw new AppError('Voyage API key not configured', 500, 'EMBEDDING_GENERATION_FAILED');
-  }
-
   try {
-    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.VoyageAPI_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        input: text,
-        model: 'voyage-3.5-lite',
-      }),
-    });
+    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Voyage API error:', data);
-      throw new AppError(
-        `Voyage API error: ${data.error?.message || 'Unknown error'}`,
-        response.status,
-        'EMBEDDING_GENERATION_FAILED'
-      );
-    }
-
-    const embedding = data.data?.[0]?.embedding;
+    const result = await model.embedContent(text);
+    const embedding = result.embedding.values;
 
     if (!embedding || embedding.length === 0) {
       throw new AppError('Failed to generate embedding', 500, 'EMBEDDING_GENERATION_FAILED');
@@ -53,6 +32,7 @@ const generateEmbedding = async (text) => {
     throw new AppError('Failed to generate embedding', 500, 'EMBEDDING_GENERATION_FAILED');
   }
 };
+
 
 /**
  * Generate match score and explanation using Groq API

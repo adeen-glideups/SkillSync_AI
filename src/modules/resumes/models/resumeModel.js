@@ -95,11 +95,16 @@ const deleteOldResumesByUserId = async (userId) => {
     });
   }
 };
-
+const getUserById = async (userId) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+  });
+}
 module.exports = {
   createResume,
   getUserResumes,
   getLatestResumeByUserId,
   deleteResumeById,
   deleteOldResumesByUserId,
+  getUserById,
 };

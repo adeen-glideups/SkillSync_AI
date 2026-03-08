@@ -83,14 +83,42 @@ model Otp {
 }
 
 model Job {
-  id           Int       @id @default(autoincrement())
-  title        String    @db.VarChar(255)
-  description  String    @db.LongText
-  embedding    Json      // 768-dimensional vector
-
-  matches      MatchResult[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          Int      @id @default(autoincrement())
+  
+  // Core Identity
+  title       String   @db.VarChar(255)
+  company     String   @db.VarChar(255)
+  
+  // Content (what gets embedded)
+  description String   @db.LongText
+  tags        Json?    // ["React", "Node.js"] — stored as array
+  
+  // Location & Work Type  
+  location    String?  @db.VarChar(255)
+  remote      Boolean  @default(false)
+  jobType     String?  @db.VarChar(100) // "full-time", "contract", "part-time"
+  
+  // Source Tracking (critical for multi-API seeding)
+  sourceApi   String   @db.VarChar(100) // "arbeitnow", "himalayas", "manual"
+  sourceUrl   String?  @db.Text         // original job URL
+  externalId  String?  @db.VarChar(255) // slug/id from the source API
+  
+  // AI Layer
+  embedding   Json?    // 768-dim vector
+  embeddedAt  DateTime? // when embedding was generated
+  
+  // Metadata
+  postedAt    DateTime? // original posting date from API
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  matches     MatchResult[]
+  
+  // Prevent duplicate imports from same source
+  @@unique([sourceApi, externalId])
+  @@index([remote])
+  @@index([location])
+  @@index([sourceApi])
 }
 
 model UserResume {
