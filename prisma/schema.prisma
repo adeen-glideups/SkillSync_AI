@@ -54,6 +54,8 @@ model User {
   otp            Otp[]
   resumes        UserResume[]
   matchResults   MatchResult[]
+  contactInfo    UserContactInfo?
+  applications   JobApplication[]
 
   @@unique([email])
 }
@@ -112,8 +114,10 @@ model Job {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
-  matches     MatchResult[]
-  
+  matches            MatchResult[]
+  screeningQuestions JobScreeningQuestion?
+  applications       JobApplication[]
+
   // Prevent duplicate imports from same source
   @@unique([sourceApi, externalId])
   @@index([remote])
@@ -130,6 +134,7 @@ model UserResume {
 
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   matches      MatchResult[]
+  applications JobApplication[]
 
   uploadedAt   DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -153,5 +158,47 @@ model MatchResult {
 
   @@index([userId])
   @@index([resumeId])
+  @@index([jobId])
+}
+
+// ─── EASY APPLY ──────────────────────────────────────────────────────────────
+
+model UserContactInfo {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  phone       String?  @db.VarChar(20)
+  countryCode String?  @db.VarChar(10)
+  city        String?  @db.VarChar(100)
+  country     String?  @db.VarChar(100)
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobScreeningQuestion {
+  id          Int      @id @default(autoincrement())
+  jobId       Int      @unique
+  questions   Json     // [{ question: string, type: "text"|"yesno"|"number" }]
+  generatedAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model JobApplication {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  jobId           Int
+  resumeId        Int
+  contactSnapshot Json     // { email, phone, countryCode, city, country } at time of apply
+  answers         Json     // [{ question: string, answer: string }]
+  status          String   @default("APPLIED") @db.VarChar(50)
+  appliedAt       DateTime @default(now())
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume UserResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId])
   @@index([jobId])
 }

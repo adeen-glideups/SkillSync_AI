@@ -12,6 +12,7 @@ const authModule = require('./modules/auth');
 const jobsModule = require('./modules/jobs');
 const resumesModule = require('./modules/resumes');
 const matchesModule = require('./modules/matches');
+const easyApplyModule = require('./modules/easyApply');
 
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/auth', authModule.router);
 app.use('/api/jobs', jobsModule.router);
 app.use('/api/resumes', resumesModule.router);
 app.use('/api/matches', matchesModule.router);
+app.use('/api/easy-apply', easyApplyModule.router);
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(process.cwd(), 'src', 'uploads')));

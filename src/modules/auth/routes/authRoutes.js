@@ -50,7 +50,8 @@ const loginWithEmailSchema = Joi.object({
 
 // Update Password
 const updatePasswordSchema = Joi.object({
-  password: Joi.string().min(8).required(),
+  oldPassword: Joi.string().min(8).required(),
+  newPassword: Joi.string().min(8).required(),
 });
 
 // Refresh Token

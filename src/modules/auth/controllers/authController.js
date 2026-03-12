@@ -79,16 +79,11 @@ const loginWithEmail = asyncHandler(async (req, res) => {
    UPDATE PASSWORD
 --------------------------- */
 const updatePassword = asyncHandler(async (req, res) => {
-  const { password } = req.body;
+  const { oldPassword, newPassword } = req.body;
   const userId = req.user.userId;
-  console.log("User ID:", userId); // Debug log
-  console.log("Updating password for userId:", password); // Debug log
-  const result = await authService.updatePassword(
-    userId,
-    password,
-  );
+  const result = await authService.updatePassword(userId, oldPassword, newPassword);
 
-  sendSuccess(res, result, "Password Updated Successfully, Please login again");
+  sendSuccess(res, result, "Password updated successfully, please login again");
 });
 const forgotPasswordRequestOtp = asyncHandler(async (req, res) => {
   const { email } = req.body;

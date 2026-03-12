@@ -280,17 +280,24 @@ const ForgotPasswordRequestOtp = async ({ email, purpose = "FORGOTPASSWORD" }) =
 
   return otp;
 };
-const updatePassword = async (userId, password) => {
-  console.log("User:", userId);
+const updatePassword = async (userId, oldPassword, newPassword) => {
   const user = await authModel.findUserById(userId);
   if (!user) {
     throw new AppError("User not found", 404, ERROR_CODES.USER_NOT_FOUND);
   }
   if (user.isDeleted) {
-    throw new AppError("User is deactivated", 404, ERROR_CODES.USER_NOT_FOUND);
+    throw new AppError("User is deactivated", 403, ERROR_CODES.ACCOUNT_DEACTIVATED);
+  }
+  if (user.provider !== "EMAIL") {
+    throw new AppError("Password change is only available for email registered users", 400, ERROR_CODES.INVALID_INPUT);
   }
 
-  const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
+  const isOldPasswordValid = await bcrypt.compare(oldPassword, user.passwordHash);
+  if (!isOldPasswordValid) {
+    throw new AppError("Old password is incorrect", 401, ERROR_CODES.OLD_PASSWORD_INCORRECT);
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, config.bcrypt.saltRounds);
 
   await authModel.updateUserPassword(user.id, hashedPassword);
 

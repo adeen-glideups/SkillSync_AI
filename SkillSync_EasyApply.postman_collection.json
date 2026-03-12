@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "SkillSync AI - Easy Apply",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_ACCESS_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "resume_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Get Prefill Data",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/easy-apply/{{job_id}}/prefill",
+          "host": ["{{base_url}}"],
+          "path": ["api", "easy-apply", "{{job_id}}", "prefill"]
+        },
+        "description": "Returns:\n- contact: email (from token) + phone/city/country (AI-extracted from resume on first call, from DB on subsequent calls)\n- resumes: list of user's uploaded resumes\n- job: title, company, location\n- screeningQuestions: AI-generated questions (cached after first call)\n\nNote: 'contact.source' will be 'extracted' on first call and 'saved' after contact is saved."
+      },
+      "response": [
+        {
+          "name": "Success - First Time (AI Extracted)",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Prefill data fetched successfully\",\n  \"data\": {\n    \"contact\": {\n      \"email\": \"user@example.com\",\n      \"phone\": \"3001234567\",\n      \"countryCode\": \"+92\",\n      \"city\": \"Karachi\",\n      \"country\": \"Pakistan\",\n      \"source\": \"extracted\"\n    },\n    \"resumes\": [\n      {\n        \"id\": 1,\n        \"fileName\": \"my_resume.pdf\",\n        \"uploadedAt\": \"2026-03-13T10:00:00.000Z\"\n      }\n    ],\n    \"job\": {\n      \"id\": 1,\n      \"title\": \"Senior Node.js Developer\",\n      \"company\": \"TechCorp\",\n      \"location\": \"Remote\"\n    },\n    \"screeningQuestions\": [\n      { \"question\": \"How many years of experience do you have with Node.js?\", \"type\": \"number\" },\n      { \"question\": \"Are you authorized to work without visa sponsorship?\", \"type\": \"yesno\" },\n      { \"question\": \"What is your notice period?\", \"type\": \"text\" },\n      { \"question\": \"What is your expected salary range?\", \"type\": \"text\" }\n    ]\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "2. Save Contact Info",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"3001234567\",\n  \"countryCode\": \"+92\",\n  \"city\": \"Karachi\",\n  \"country\": \"Pakistan\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/easy-apply/contact",
+          "host": ["{{base_url}}"],
+          "path": ["api", "easy-apply", "contact"]
+        },
+        "description": "Manually save or update user's contact info.\nAll fields are optional — only send what needs to be updated.\nThis data is reused across all future Easy Apply submissions."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Contact info saved successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"userId\": 5,\n    \"phone\": \"3001234567\",\n    \"countryCode\": \"+92\",\n    \"city\": \"Karachi\",\n    \"country\": \"Pakistan\",\n    \"updatedAt\": \"2026-03-13T10:05:00.000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "3. Submit Application",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resumeId\": {{resume_id}},\n  \"contact\": {\n    \"email\": \"user@example.com\",\n    \"phone\": \"3001234567\",\n    \"countryCode\": \"+92\",\n    \"city\": \"Karachi\",\n    \"country\": \"Pakistan\"\n  },\n  \"answers\": [\n    {\n      \"question\": \"How many years of experience do you have with Node.js?\",\n      \"answer\": \"3\"\n    },\n    {\n      \"question\": \"Are you authorized to work without visa sponsorship?\",\n      \"answer\": \"Yes\"\n    },\n    {\n      \"question\": \"What is your notice period?\",\n      \"answer\": \"1 month\"\n    },\n    {\n      \"question\": \"What is your expected salary range?\",\n      \"answer\": \"$3000 - $5000/month\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/easy-apply/{{job_id}}/submit",
+          "host": ["{{base_url}}"],
+          "path": ["api", "easy-apply", "{{job_id}}", "submit"]
+        },
+        "description": "Submit Easy Apply for a job.\n\nBehavior:\n- Validates resume belongs to the user\n- Prevents duplicate applications (same user + job = 409)\n- Saves contact info to DB for future use\n- Sends confirmation email to user\n- Returns application record\n\nErrors:\n- 404: Job not found\n- 404: Resume not found / doesn't belong to user\n- 409: Already applied to this job"
+      },
+      "response": [
+        {
+          "name": "Success - 201 Created",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Application submitted successfully\",\n  \"data\": {\n    \"applicationId\": 12,\n    \"status\": \"APPLIED\",\n    \"appliedAt\": \"2026-03-13T10:10:00.000Z\",\n    \"job\": {\n      \"title\": \"Senior Node.js Developer\",\n      \"company\": \"TechCorp\"\n    },\n    \"resume\": {\n      \"id\": 1,\n      \"fileName\": \"my_resume.pdf\"\n    }\n  }\n}"
+        },
+        {
+          "name": "Error - Already Applied",
+          "status": "Conflict",
+          "code": 409,
+          "body": "{\n  \"success\": false,\n  \"message\": \"You have already applied to this job\",\n  \"error_code\": \"ALREADY_APPLIED\"\n}"
+        },
+        {
+          "name": "Error - Job Not Found",
+          "status": "Not Found",
+          "code": 404,
+          "body": "{\n  \"success\": false,\n  \"message\": \"Job not found\",\n  \"error_code\": \"JOB_NOT_FOUND\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "4. My Applications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/easy-apply/my-applications",
+          "host": ["{{base_url}}"],
+          "path": ["api", "easy-apply", "my-applications"]
+        },
+        "description": "Returns all jobs the authenticated user has applied to, sorted by most recent first."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Applications fetched successfully\",\n  \"data\": {\n    \"applications\": [\n      {\n        \"id\": 12,\n        \"jobId\": 1,\n        \"resumeId\": 1,\n        \"status\": \"APPLIED\",\n        \"appliedAt\": \"2026-03-13T10:10:00.000Z\",\n        \"job\": {\n          \"title\": \"Senior Node.js Developer\",\n          \"company\": \"TechCorp\"\n        }\n      }\n    ]\n  }\n}"
+        }
+      ]
+    }
+  ]
+}
