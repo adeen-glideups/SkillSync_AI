@@ -139,7 +139,7 @@ Return ONLY this JSON format (no other text):
 
 /**
  * Generate a fallback score and explanation when Groq API is unavailable
- * Uses direct skill matching to assign a score (0-100)
+ * Uses direct skill matchi ng to assign a score (0-100)
  * @param {string} resumeText - The resume text
  * @param {object} job - Job object with title and description
  * @returns {object} - Object with matchScore and explanation

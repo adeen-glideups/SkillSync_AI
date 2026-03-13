@@ -108,6 +108,7 @@ model Job {
   // AI Layer
   embedding   Json?    // 768-dim vector
   embeddedAt  DateTime? // when embedding was generated
+  category    String?  @db.VarChar(100) // e.g. "software engineering", "design"
   
   // Metadata
   postedAt    DateTime? // original posting date from API
