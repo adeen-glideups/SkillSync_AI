@@ -9,7 +9,7 @@ const baseUrl = config.app.baseUrl;
 --------------------------- */
 const signup = asyncHandler(async (req, res) => {
   const { email, password, name, gender, } = req.body;
-  const profileImage = req.file ? `${baseUrl}/uploads/${req.file.filename}` : null;
+  const profileImage = req.file ? `${baseUrl}/uploads/profile/${req.file.filename}` : null;
   console.log("Signup data:", { email, name, gender, profileImage }); // Debug log
   const result = await authService.signup({ email, password, name, gender, profileImage });
 
@@ -141,7 +141,7 @@ const updateProfile = asyncHandler(async (req, res) => {
   // determine profileImage value: uploaded file takes precedence
   let profileImage;
   if (req.file) {
-    profileImage = `${baseUrl}/uploads/${req.file.filename}`;
+    profileImage = `${baseUrl}/uploads/profile/${req.file.filename}`;
   } else if (removeProfileImage) {
     profileImage = null; // explicit clear flag
   }

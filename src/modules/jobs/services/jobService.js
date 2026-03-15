@@ -30,6 +30,50 @@ const createJobWithEmbedding = async (title, description) => {
   }
 };
 
+/**
+ * Get paginated job listings with filters
+ */
+const getJobsList = async (query) => {
+  return jobModel.getJobsPaginated(query);
+};
+
+/**
+ * Get all distinct categories with counts
+ */
+const getCategories = async () => {
+  return jobModel.getDistinctCategories();
+};
+
+/**
+ * Get full job detail by ID
+ */
+const getJobDetail = async (id) => {
+  const job = await jobModel.getJobDetailById(id);
+  if (!job) {
+    throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
+  }
+  return job;
+};
+
+/**
+ * Get home dashboard stats for authenticated user
+ */
+const getHomeDashboard = async (userId) => {
+  return jobModel.getUserDashboardCounts(userId);
+};
+
+/**
+ * Get user's match results with job details, paginated
+ */
+const getUserMatches = async (userId, query) => {
+  return jobModel.getUserMatchesPaginated(userId, query);
+};
+
 module.exports = {
   createJobWithEmbedding,
+  getJobsList,
+  getCategories,
+  getJobDetail,
+  getHomeDashboard,
+  getUserMatches,
 };

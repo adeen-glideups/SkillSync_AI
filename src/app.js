@@ -18,7 +18,7 @@ const easyApplyModule = require('./modules/easyApply');
 const app = express();
 
 // Global middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
