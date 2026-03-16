@@ -33,4 +33,20 @@ router.post(
   matchController.getMatches
 );
 
+router.get(
+  '/resume/:resumeId',
+  authenticate,
+  matchController.getMatchesByResumeId
+);
+
+/**
+ * DELETE /api/matches/resume/:resumeId
+ * Clear all match results for a specific resume
+ */
+router.delete(
+  '/resume/:resumeId',
+  authenticate,
+  matchController.clearMatchesByResumeId
+);
+
 module.exports = router;

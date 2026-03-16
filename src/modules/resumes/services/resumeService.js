@@ -89,7 +89,35 @@ const uploadResumeWithEmbedding = async (userId, file) => {
   }
 };
 
+const deleteResumeById = async (userId, resumeId) => {
+  const resume = await resumeModel.findResumeById(resumeId);
+
+  if (!resume) {
+    throw new AppError('Resume not found', 404, 'RESUME_NOT_FOUND');
+  }
+
+  if (resume.userId !== userId) {
+    throw new AppError('You do not have permission to delete this resume.', 403, 'FORBIDDEN_RESUME_ACCESS');
+  }
+
+  await resumeModel.deleteResumeById(resumeId);
+  return { id: resume.id, fileName: resume.fileName };
+};
+
+const clearAllResumes = async (userId) => {
+  const resumes = await resumeModel.getUserResumes(userId);
+
+  if (!resumes || resumes.length === 0) {
+    throw new AppError('No resumes found to delete', 404, 'NO_RESUMES_FOUND');
+  }
+
+  await resumeModel.deleteAllResumesByUserId(userId);
+  return { deletedCount: resumes.length };
+};
+
 module.exports = {
   getUserResumes,
   uploadResumeWithEmbedding,
+  deleteResumeById,
+  clearAllResumes,
 };

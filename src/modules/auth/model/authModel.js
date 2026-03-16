@@ -63,6 +63,24 @@ const findUserById = (id) => {
   });
 };
 
+const findUserProfileById = (id) => {
+  return prisma.user.findUnique({
+    where: { id, isDeleted: false },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      gender: true,
+      profileImage: true,
+      provider: true,
+      isEmailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      contactInfo: true,
+    },
+  });
+};
+
 const updateUser = (userId, data) => {
   return prisma.user.update({
     where: { id: userId },
@@ -167,6 +185,7 @@ module.exports = {
   createUser,
   deleteUserById,
   findUserById,
+  findUserProfileById,
   updateUser,
   findUserByPhone,
   createUserJoin,

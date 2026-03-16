@@ -156,16 +156,40 @@ const updateProfile = asyncHandler(async (req, res) => {
   sendSuccess(res, result, "Profile updated successfully");
 });
 
+/* ---------------------------
+   GET PROFILE
+--------------------------- */
+const getProfile = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+  const result = await authService.getProfile(userId);
+
+  sendSuccess(res, result, "Profile fetched successfully");
+});
+
+/* ---------------------------
+   RESET PASSWORD
+--------------------------- */
+const resetPassword = asyncHandler(async (req, res) => {
+  const { password } = req.body;
+  const userId = req.user.userId;
+
+  await authService.resetPassword(userId, password);
+
+  sendSuccess(res, null, "Password reset successfully, you have been logged out from all devices");
+});
+
 module.exports = {
   signup,
   requestOtp,
   verifyOtp,
   loginWithEmail,
   updatePassword,
+  resetPassword,
   refreshToken,
   logout,
   logoutAll,
   forgotPasswordRequestOtp,
   joinWithFirebase,
   updateProfile,
+  getProfile,
 };

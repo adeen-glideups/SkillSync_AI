@@ -163,6 +163,7 @@ const verifyEmailOtp = async (
     id: user.id,
     email: user.email,
     name: user.name,
+    gender: user.gender,
     profileImage: user.profileImage,
     isEmailVerified: true,
     isDeleted: user.isDeleted,
@@ -229,6 +230,7 @@ const loginWithEmail = async ({
     id: user.id,
     email: user.email,
     name: user.name,
+    gender: user.gender,
     profileImage: user.profileImage,
     isEmailVerified: true,
     isDeleted: user.isDeleted,
@@ -554,12 +556,53 @@ const updateProfile = async ({ userId, name, gender, profileImage }) => {
   };
 };
 
+/* ---------------------------
+   GET PROFILE
+--------------------------- */
+const getProfile = async (userId) => {
+  const user = await authModel.findUserProfileById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404, ERROR_CODES.USER_NOT_FOUND);
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    gender: user.gender,
+    profileImage: user.profileImage,
+    provider: user.provider,
+    isEmailVerified: user.isEmailVerified,
+    contactInfo: user.contactInfo
+      ? {
+          phone: user.contactInfo.phone,
+          countryCode: user.contactInfo.countryCode,
+          city: user.contactInfo.city,
+          country: user.contactInfo.country,
+        }
+      : null,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
+
+/* ---------------------------
+   RESET PASSWORD
+--------------------------- */
+const resetPassword = async (userId, password) => {
+  const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
+  await authModel.updateUserPassword(userId, hashedPassword);
+  await authModel.deleteAllTokensByUser(userId);
+  return;
+};
+
 module.exports = {
   signup,
   requestOtp,
   loginWithEmail,
   verifyEmailOtp,
   updatePassword,
+  resetPassword,
   refreshTokens,
   logout,
   logoutAll,
@@ -567,4 +610,5 @@ module.exports = {
   verifyPasswordOtp,
   ForgotPasswordRequestOtp,
   updateProfile,
+  getProfile,
 };

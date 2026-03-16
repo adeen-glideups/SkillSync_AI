@@ -39,6 +39,16 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
       );
     }
 
+    // Edge Case: Matches already exist for this resume
+    const alreadyMatched = await matchModel.matchesExistForResume(userId, resumeId);
+    if (alreadyMatched) {
+      throw new AppError(
+        'Match results already exist for this resume. Use GET /api/matches/resume/:resumeId to view them.',
+        409,
+        'MATCHES_ALREADY_EXIST'
+      );
+    }
+
     // Edge Case 3: Resume has no embedding (should not happen in normal flow)
     if (!resume.embedding) {
       throw new AppError(
@@ -182,6 +192,74 @@ const calculateMatches = async (userId, resumeId, topN = 5) => {
   }
 };
 
+const getMatchesByResumeId = async (userId, resumeId) => {
+  const resume = await matchModel.getResumeById(resumeId);
+
+  if (!resume) {
+    throw new AppError(
+      `Resume with ID ${resumeId} not found`,
+      404,
+      'RESUME_NOT_FOUND'
+    );
+  }
+
+  if (resume.userId !== userId) {
+    throw new AppError(
+      'You do not have permission to access this resume.',
+      403,
+      'FORBIDDEN_RESUME_ACCESS'
+    );
+  }
+
+  const matches = await matchModel.findMatchesByResumeId(userId, resumeId);
+
+  return {
+    resumeId: resume.id,
+    fileName: resume.fileName,
+    uploadedAt: resume.uploadedAt,
+    totalMatches: matches.length,
+    matches: matches.map((m, index) => ({
+      rank: index + 1,
+      matchId: m.id,
+      matchScore: m.similarityScore,
+      explanation: m.explanation,
+      matchedAt: m.createdAt,
+      job: m.job,
+    })),
+  };
+};
+
+const clearMatchesByResumeId = async (userId, resumeId) => {
+  const resume = await matchModel.getResumeById(resumeId);
+
+  if (!resume) {
+    throw new AppError(
+      `Resume with ID ${resumeId} not found`,
+      404,
+      'RESUME_NOT_FOUND'
+    );
+  }
+
+  if (resume.userId !== userId) {
+    throw new AppError(
+      'You do not have permission to access this resume.',
+      403,
+      'FORBIDDEN_RESUME_ACCESS'
+    );
+  }
+
+  const count = await matchModel.countMatchesByResumeId(userId, resumeId);
+
+  if (count === 0) {
+    throw new AppError('No match results found for this resume', 404, 'NOT_FOUND');
+  }
+
+  await matchModel.deleteMatchesByResumeId(userId, resumeId);
+  return { resumeId, deletedCount: count };
+};
+
 module.exports = {
   calculateMatches,
+  getMatchesByResumeId,
+  clearMatchesByResumeId,
 };

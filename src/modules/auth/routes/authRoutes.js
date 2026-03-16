@@ -124,6 +124,9 @@ router.post(
 
 router.post("/logout-all", authenticate, authController.logoutAll);
 
+// Get user profile
+router.get("/profile", authenticate, authController.getProfile);
+
 // Update profile (name, gender, profileImage)
 const updateProfileSchema = Joi.object({
   name: Joi.string().trim().optional(),
@@ -138,6 +141,18 @@ router.post(
   uploadProfileImage,
   validate(updateProfileSchema),
   authController.updateProfile
+);
+
+// Reset Password
+const resetPasswordSchema = Joi.object({
+  password: Joi.string().min(8).required(),
+});
+
+router.post(
+  "/reset-password",
+  authenticate,
+  validate(resetPasswordSchema),
+  authController.resetPassword
 );
 
 module.exports = router;

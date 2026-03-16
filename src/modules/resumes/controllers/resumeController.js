@@ -1,5 +1,6 @@
 const resumeService = require('../services/resumeService');
 const {asyncHandler} = require('../../../shared/utils/asyncHandler');
+const {sendSuccess} = require('../../../shared/utils/response');
 const AppError = require('../../../shared/middleware/errorHandler').AppError;
 
 /**
@@ -48,7 +49,26 @@ const uploadResume = asyncHandler(async (req, res, next) => {
   });
 });
 
+const deleteResumeById = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+  const resumeId = parseInt(req.params.resumeId, 10);
+
+  const result = await resumeService.deleteResumeById(userId, resumeId);
+
+  sendSuccess(res, result, 'Resume deleted successfully');
+});
+
+const clearAllResumes = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+
+  const result = await resumeService.clearAllResumes(userId);
+
+  sendSuccess(res, result, 'All resumes cleared successfully');
+});
+
 module.exports = {
   getUserResumes,
   uploadResume,
+  deleteResumeById,
+  clearAllResumes,
 };

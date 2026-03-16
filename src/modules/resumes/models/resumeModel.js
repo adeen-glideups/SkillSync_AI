@@ -49,9 +49,22 @@ const getLatestResumeByUserId = async (userId) => {
  * @param {number} resumeId - Resume ID
  * @returns {Promise<object>} - Deleted resume object
  */
+const findResumeById = async (resumeId) => {
+  return prisma.userResume.findUnique({
+    where: { id: resumeId },
+    select: { id: true, userId: true, fileName: true },
+  });
+};
+
 const deleteResumeById = async (resumeId) => {
   return prisma.userResume.delete({
     where: { id: resumeId },
+  });
+};
+
+const deleteAllResumesByUserId = async (userId) => {
+  return prisma.userResume.deleteMany({
+    where: { userId },
   });
 };
 
@@ -104,7 +117,9 @@ module.exports = {
   createResume,
   getUserResumes,
   getLatestResumeByUserId,
+  findResumeById,
   deleteResumeById,
+  deleteAllResumesByUserId,
   deleteOldResumesByUserId,
   getUserById,
 };

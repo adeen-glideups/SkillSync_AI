@@ -69,9 +69,52 @@ const createMultipleMatchResults = async (results) => {
   });
 };
 
+const findMatchesByResumeId = async (userId, resumeId) => {
+  return prisma.matchResult.findMany({
+    where: { userId, resumeId },
+    include: {
+      job: {
+        select: {
+          id: true,
+          title: true,
+          company: true,
+          location: true,
+          remote: true,
+          jobType: true,
+          sourceUrl: true,
+        },
+      },
+    },
+    orderBy: { similarityScore: 'desc' },
+  });
+};
+
+const matchesExistForResume = async (userId, resumeId) => {
+  const count = await prisma.matchResult.count({
+    where: { userId, resumeId },
+  });
+  return count > 0;
+};
+
+const deleteMatchesByResumeId = async (userId, resumeId) => {
+  return prisma.matchResult.deleteMany({
+    where: { userId, resumeId },
+  });
+};
+
+const countMatchesByResumeId = async (userId, resumeId) => {
+  return prisma.matchResult.count({
+    where: { userId, resumeId },
+  });
+};
+
 module.exports = {
   getResumeById,
   getAllJobs,
   createMatchResult,
   createMultipleMatchResults,
+  findMatchesByResumeId,
+  matchesExistForResume,
+  deleteMatchesByResumeId,
+  countMatchesByResumeId,
 };

@@ -28,4 +28,16 @@ router.post(
   resumeController.uploadResume
 );
 
+router.delete(
+  '/:resumeId',
+  authenticate,
+  resumeController.deleteResumeById
+);
+
+router.delete(
+  '/',
+  authenticate,
+  resumeController.clearAllResumes
+);
+
 module.exports = router;
