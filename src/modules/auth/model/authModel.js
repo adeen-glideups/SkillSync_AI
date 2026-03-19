@@ -47,12 +47,9 @@ const createUserJoin = (data) => {
       id: true,
       email: true,
       name: true,
-      username: true,
       provider: true,
       profileImage: true,
-      OwnerLicenseImg: true,
       isEmailVerified: true,
-      userType: true,
       createdAt: true,
     },
   });

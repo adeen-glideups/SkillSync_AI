@@ -2,3 +2,4 @@
 /tmpclaude-*
 /.env
 .env
+src/config/firebase.json

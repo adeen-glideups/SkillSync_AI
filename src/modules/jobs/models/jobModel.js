@@ -90,9 +90,12 @@ const buildJobWhereClause = ({ search, remote, category, jobType }) => {
 /**
  * Get paginated jobs with filters
  */
-const getJobsPaginated = async ({ page = 1, limit = 10, search, remote, category, jobType }) => {
+const getJobsPaginated = async ({ page = 1, limit = 10, search, remote, category, jobType, sort = 'newest' }) => {
   const where = buildJobWhereClause({ search, remote, category, jobType });
   const skip = (page - 1) * limit;
+
+  // Determine sort order
+  const orderBy = sort === 'oldest' ? { createdAt: 'asc' } : { createdAt: 'desc' };
 
   const [jobs, total] = await Promise.all([
     prisma.job.findMany({
@@ -110,7 +113,7 @@ const getJobsPaginated = async ({ page = 1, limit = 10, search, remote, category
         postedAt: true,
         createdAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip,
       take: limit,
     }),

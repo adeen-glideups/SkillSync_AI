@@ -116,9 +116,6 @@ const sendApplicationEmail = async (email, name, jobTitle, company) => {
               <p>The company will review your application and reach out to you if you're a good fit.</p>
               <p><b>Please wait for the company's response.</b> We'll keep you posted on any updates.</p>
 
-              <p style="color:#888;font-size:13px;margin-top:30px;">
-                You can track all your applications in the SkillSync AI app.
-              </p>
             </div>
 
             <p style="text-align:center;font-size:12px;color:#666;">

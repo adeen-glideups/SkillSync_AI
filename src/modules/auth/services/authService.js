@@ -259,7 +259,7 @@ const ForgotPasswordRequestOtp = async ({ email, purpose = "FORGOTPASSWORD" }) =
     );
   }
   if (user.provider !== "EMAIL") {
-    throw new AppError("Password change is only available for email registered users", 400, ERROR_CODES.INVALID_INPUT);
+    throw new AppError("Forgot password is only available for email registered users", 400, ERROR_CODES.INVALID_INPUT);
   }
   if (purpose !== "FORGOTPASSWORD") {
     throw new AppError("Invalid OTP purpose", 400, ERROR_CODES.INVALID_INPUT);
@@ -443,9 +443,7 @@ const joinWithFirebase = async (data) => {
         email: firebaseUser.email,
         name: firebaseUser.name || `temp_user_${Date.now()}`,
         gender: firebaseUser.gender || "other",
-        userType: "buissness",
         provider: authProvider || "GOOGLE",
-        username: `temp_username_${Date.now()}`,
         isEmailVerified: true,
       });
 
@@ -469,13 +467,6 @@ const joinWithFirebase = async (data) => {
           ERROR_CODES.ACCOUNT_SUSPENDED
         );
       }
-      if (user.userType !== "buissness") {
-        throw new AppError(
-          "This account is not a business account, Only Business Can Login here",
-          403,
-          ERROR_CODES.FORBIDDEN
-        );
-      }
     }
     const updatedUser = await authModel.findUserByEmail(firebaseUser.email);
     user = updatedUser;
@@ -496,7 +487,6 @@ const joinWithFirebase = async (data) => {
       ipAddress: ipAddress || null,
       fcmToken: fcmToken || null,
     });
-    const hasBusinessSetup = await authModel.hasBusinessSetup(user.id);
 
     return {
       id: user.id,
@@ -504,12 +494,6 @@ const joinWithFirebase = async (data) => {
       name: user.name,
       profileImageUrl: user.profileImageUrl,
       authProvider: user.provider,
-      isNewUser,
-      isEmailVerified: user.isEmailVerified,
-      buissnessLicenseImg: user.buissnessLicenseImg,
-      hasBusinessSetup,
-      nic: user.nic ? user.nic.toString() : null,
-      isOwnerRegistered: (user.nic && user.phoneNumber && user.OwnerLicenseImg) ? true : false,
       isDeleted: user.isDeleted,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

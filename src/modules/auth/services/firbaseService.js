@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-// const serviceAccount = require("../../../config/firebase.json");
+const serviceAccount = require("../../../config/firebase.json");
 const { AppError } = require("../../../shared/middleware/errorHandler");
 const  ERROR_CODES  = require("../../../shared/constants/errorCodes");
 

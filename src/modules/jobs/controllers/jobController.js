@@ -27,7 +27,7 @@ const createJob = asyncHandler(async (req, res, next) => {
  * GET /api/jobs
  */
 const listJobs = asyncHandler(async (req, res) => {
-  const { page, limit, search, remote, category, jobType } = req.query;
+  const { page, limit, search, remote, category, jobType, sort } = req.query;
 
   const result = await jobService.getJobsList({
     page: page || 1,
@@ -36,6 +36,7 @@ const listJobs = asyncHandler(async (req, res) => {
     remote,
     category,
     jobType,
+    sort: sort || 'newest',
   });
 
   sendSuccess(res, result, 'Jobs fetched successfully');

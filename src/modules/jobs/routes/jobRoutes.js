@@ -20,6 +20,7 @@ const listJobsSchema = Joi.object({
   remote: Joi.boolean().optional(),
   category: Joi.string().trim().max(100).optional(),
   jobType: Joi.string().trim().max(100).optional(),
+  sort: Joi.string().valid('newest', 'oldest').default('newest'),
 });
 
 const jobIdSchema = Joi.object({
