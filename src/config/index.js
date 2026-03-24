@@ -15,6 +15,10 @@ module.exports = {
   bcrypt: {
     saltRounds: 10,
   },
+  firebase: {
+    serviceAccount: JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT),
+  },
+
   email: {
     host: process.env.EMAIL_HOST || "smtp.gmail.com",
     port: process.env.EMAIL_PORT || 587,

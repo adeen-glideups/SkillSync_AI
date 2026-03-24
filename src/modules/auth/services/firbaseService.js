@@ -1,7 +1,9 @@
 const admin = require('firebase-admin');
-const serviceAccount = require("../../../config/firebase.json");
+config = require('../../../config');
+const serviceAccount = config.firebase.serviceAccount;
 const { AppError } = require("../../../shared/middleware/errorHandler");
 const  ERROR_CODES  = require("../../../shared/constants/errorCodes");
+const { config } = require('dotenv');
 
 let firebaseInitialized = false;
 
