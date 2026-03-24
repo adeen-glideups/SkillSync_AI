@@ -1,15 +1,13 @@
 const { asyncHandler } = require("../../../shared/utils/asyncHandler");
 const { sendSuccess, sendCreated } = require("../../../shared/utils/response");
 const authService = require("../services/authService");
-const config = require("../../../config");
-const baseUrl = config.app.baseUrl;
 
 /* ---------------------------
    ✅ STEP 1: SIGNUP
 --------------------------- */
 const signup = asyncHandler(async (req, res) => {
   const { email, password, name, gender, } = req.body;
-  const profileImage = req.file ? `${baseUrl}/uploads/profile/${req.file.filename}` : null;
+  const profileImage = req.file?.cloudinaryUrl || null;
   console.log("Signup data:", { email, name, gender, profileImage }); // Debug log
   const result = await authService.signup({ email, password, name, gender, profileImage });
 
@@ -140,8 +138,8 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   // determine profileImage value: uploaded file takes precedence
   let profileImage;
-  if (req.file) {
-    profileImage = `${baseUrl}/uploads/profile/${req.file.filename}`;
+  if (req.file?.cloudinaryUrl) {
+    profileImage = req.file.cloudinaryUrl;
   } else if (removeProfileImage) {
     profileImage = null; // explicit clear flag
   }

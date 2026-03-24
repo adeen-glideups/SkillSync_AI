@@ -1,4 +1,3 @@
-const fs = require('fs');
 const resumeModel = require('../models/resumeModel');
 const { parseResumeFile, cleanText } = require('../../../shared/utils/fileParser');
 const { generateEmbedding } = require('../../../shared/utils/embeddingService');
@@ -52,8 +51,8 @@ const uploadResumeWithEmbedding = async (userId, file) => {
   let resumeText = '';
 
   try {
-    // Parse file and extract text
-    resumeText = await parseResumeFile(file.path, file.mimetype);
+    // Parse file buffer and extract text
+    resumeText = await parseResumeFile(file.buffer, file.mimetype, file.originalname);
     resumeText = cleanText(resumeText);
 
     if (!resumeText || resumeText.length === 0) {
@@ -76,11 +75,6 @@ const uploadResumeWithEmbedding = async (userId, file) => {
 
     return resume;
   } catch (error) {
-    // Clean up uploaded file on error
-    if (file && file.path && fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-    }
-
     if (error instanceof AppError) {
       throw error;
     }

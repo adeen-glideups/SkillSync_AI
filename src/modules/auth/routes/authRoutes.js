@@ -4,8 +4,6 @@ const { validate } = require("../../../shared/middleware/validate");
 const { authenticate } = require("../middleware/authenticate");
 const authController = require("../controllers/authController");
 const {
-  uploadRestaurantImages,
-  registerInitialUpload,
   uploadProfileImage, // used for user signup
 } = require("../../../shared/utils/uploadHelper");
 

@@ -1,24 +1,21 @@
-const fs = require('fs');
-const path = require('path');
 const mammoth = require('mammoth');
 const AppError = require('../middleware/errorHandler').AppError;
 
 console.log('✅ PDF and DOCX parsers loaded successfully');
 
 /**
- * Extract text from PDF file
- * @param {string} filePath - Path to PDF file
+ * Extract text from PDF buffer
+ * @param {Buffer} buffer - PDF file buffer
  * @returns {Promise<string>} - Extracted text from PDF
  */
-const extractPdfText = async (filePath) => {
+const extractPdfText = async (buffer) => {
   try {
     // Dynamically import pdfjs-dist ES module
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const pdfjsLib = pdfjs.default || pdfjs;
 
-    const dataBuffer = fs.readFileSync(filePath);
     // Convert Buffer to Uint8Array for pdfjs-dist
-    const uint8Array = new Uint8Array(dataBuffer);
+    const uint8Array = new Uint8Array(buffer);
     const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
 
     let fullText = '';
@@ -54,13 +51,13 @@ const extractPdfText = async (filePath) => {
 };
 
 /**
- * Extract text from DOCX file
- * @param {string} filePath - Path to DOCX file
+ * Extract text from DOCX buffer
+ * @param {Buffer} buffer - DOCX file buffer
  * @returns {Promise<string>} - Extracted text from DOCX
  */
-const extractDocxText = async (filePath) => {
+const extractDocxText = async (buffer) => {
   try {
-    const result = await mammoth.extractRawText({ path: filePath });
+    const result = await mammoth.extractRawText({ buffer });
     return result.value || '';
   } catch (error) {
     console.error('DOCX parsing error:', error);
@@ -69,28 +66,29 @@ const extractDocxText = async (filePath) => {
 };
 
 /**
- * Parse resume file and extract text based on file extension or MIME type
- * @param {string} filePath - Path to the uploaded file
+ * Parse resume file and extract text based on MIME type
+ * @param {Buffer} buffer - File buffer
  * @param {string} mimeType - MIME type of the file
+ * @param {string} originalName - Original filename (for extension detection)
  * @returns {Promise<string>} - Extracted text from resume
  */
-const parseResumeFile = async (filePath, mimeType) => {
-  if (!filePath || !fs.existsSync(filePath)) {
-    throw new AppError('Resume file not found', 400, 'FILE_NOT_FOUND');
+const parseResumeFile = async (buffer, mimeType, originalName = '') => {
+  if (!buffer || buffer.length === 0) {
+    throw new AppError('Resume file is empty', 400, 'FILE_NOT_FOUND');
   }
 
-  const fileExtension = path.extname(filePath).toLowerCase();
+  const fileExtension = originalName ? originalName.toLowerCase().split('.').pop() : '';
   let text = '';
 
   // Detect file type by extension or MIME type
-  if (fileExtension === '.pdf' || mimeType === 'application/pdf') {
-    text = await extractPdfText(filePath);
+  if (fileExtension === 'pdf' || mimeType === 'application/pdf') {
+    text = await extractPdfText(buffer);
   } else if (
-    fileExtension === '.docx' ||
+    fileExtension === 'docx' ||
     mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     mimeType === 'application/vnd.ms-word.document.macroEnabled.12'
   ) {
-    text = await extractDocxText(filePath);
+    text = await extractDocxText(buffer);
   } else {
     throw new AppError('Unsupported file format. Please upload PDF or DOCX.', 400, 'INVALID_RESUME_FORMAT');
   }

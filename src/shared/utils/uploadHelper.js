@@ -1,21 +1,19 @@
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
+const { v2: cloudinary } = require("cloudinary");
 const { AppError } = require("../middleware/errorHandler");
 const ERROR_CODES = require("../constants/errorCodes");
+const config = require("../../config");
 
-// Ensure upload directories exist (lazy creation)
-const ensureDirectoryExists = (dirPath) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-};
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: config.cloudinary.cloudName,
+  api_key: config.cloudinary.apiKey,
+  api_secret: config.cloudinary.apiSecret,
+});
 
-// Use /tmp on Vercel (read-only filesystem), local path otherwise
-const isVercel = process.env.VERCEL === "1";
-const uploadsDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "..", "..", "uploads");
-const profileDir = path.join(uploadsDir, "profile");
-const resumesDir = path.join(uploadsDir, "resumes");
+// Use memory storage for serverless compatibility (Vercel)
+const memoryStorage = multer.memoryStorage();
 
 // File filter - images only
 const imageFilter = (req, file, cb) => {
@@ -53,10 +51,59 @@ const resumeFilter = (req, file, cb) => {
   }
 };
 
-// Middleware wrapper to handle multer errors
-const handleMulterError = (uploadFunction) => {
+/**
+ * Upload buffer to Cloudinary
+ * @param {Buffer} buffer - File buffer
+ * @param {string} folder - Folder path in Cloudinary (e.g., 'profile', 'resumes')
+ * @param {string} resourceType - 'image' or 'raw' (for non-image files like PDF/DOCX)
+ * @returns {Promise<string>} - Public URL of uploaded file
+ */
+const uploadToCloudinary = (buffer, folder, resourceType = "image") => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `skillsync/${folder}`,
+        resource_type: resourceType,
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.secure_url);
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
+/**
+ * Delete file from Cloudinary
+ * @param {string} fileUrl - Public URL of the file to delete
+ */
+const deleteFromCloudinary = async (fileUrl) => {
+  try {
+    if (!fileUrl || !fileUrl.includes("cloudinary.com")) return;
+
+    // Extract public_id from URL
+    const urlParts = fileUrl.split("/");
+    const uploadIndex = urlParts.indexOf("upload");
+    if (uploadIndex === -1) return;
+
+    // Get everything after 'upload/v{version}/'
+    const publicIdWithExt = urlParts.slice(uploadIndex + 2).join("/");
+    const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ""); // Remove extension
+
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error("Error deleting file from Cloudinary:", error.message);
+  }
+};
+
+// Middleware wrapper to handle multer errors and upload to Cloudinary
+const handleMulterError = (uploadFunction, folder, resourceType = "image") => {
   return (req, res, next) => {
-    uploadFunction(req, res, (err) => {
+    uploadFunction(req, res, async (err) => {
       if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
           return next(
@@ -102,51 +149,46 @@ const handleMulterError = (uploadFunction) => {
         );
       }
 
+      // If file exists, upload to Cloudinary
+      if (req.file && req.file.buffer) {
+        try {
+          const publicUrl = await uploadToCloudinary(
+            req.file.buffer,
+            folder,
+            resourceType
+          );
+
+          // Attach the public URL to the file object
+          req.file.cloudinaryUrl = publicUrl;
+        } catch (uploadError) {
+          console.error("Cloudinary upload error:", uploadError);
+          return next(
+            new AppError(
+              "Failed to upload file to storage",
+              500,
+              ERROR_CODES.FILE_UPLOAD_ERROR
+            )
+          );
+        }
+      }
+
       next();
     });
   };
 };
 
-// Storage configuration for profile images
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    ensureDirectoryExists(profileDir);
-    cb(null, profileDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      "profile-" + uniqueSuffix + path.extname(file.originalname).toLowerCase()
-    );
-  },
-});
-
+// Multer config for profile images
 const profileImageUpload = multer({
-  storage: profileStorage,
+  storage: memoryStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
   },
   fileFilter: imageFilter,
 }).single("profileImage");
 
-// Storage configuration for resumes
-const resumeStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    ensureDirectoryExists(resumesDir);
-    cb(null, resumesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      "resume-" + uniqueSuffix + path.extname(file.originalname).toLowerCase()
-    );
-  },
-});
-
-const resumeUpload = multer({
-  storage: resumeStorage,
+// Multer config for resumes
+const resumeUploadMulter = multer({
+  storage: memoryStorage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB
   },
@@ -155,6 +197,8 @@ const resumeUpload = multer({
 
 // Export
 module.exports = {
-  uploadProfileImage: handleMulterError(profileImageUpload),
-  uploadResume: handleMulterError(resumeUpload),
+  uploadProfileImage: handleMulterError(profileImageUpload, "profile", "image"),
+  uploadResume: handleMulterError(resumeUploadMulter, "resumes", "raw"),
+  uploadToCloudinary,
+  deleteFromCloudinary,
 };
