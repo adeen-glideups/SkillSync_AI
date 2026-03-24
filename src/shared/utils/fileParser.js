@@ -1,4 +1,5 @@
 const mammoth = require('mammoth');
+const pdfParse = require('pdf-parse');
 const AppError = require('../middleware/errorHandler').AppError;
 
 console.log('✅ PDF and DOCX parsers loaded successfully');
@@ -10,36 +11,13 @@ console.log('✅ PDF and DOCX parsers loaded successfully');
  */
 const extractPdfText = async (buffer) => {
   try {
-    // Dynamically import pdfjs-dist ES module
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    const pdfjsLib = pdfjs.default || pdfjs;
+    const data = await pdfParse(buffer);
 
-    // Convert Buffer to Uint8Array for pdfjs-dist
-    const uint8Array = new Uint8Array(buffer);
-    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-
-    let fullText = '';
-
-    // Extract text from each page
-    for (let i = 1; i <= pdf.numPages; i++) {
-      try {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item) => (item.str ? item.str : ''))
-          .join(' ');
-        fullText += pageText + ' ';
-      } catch (pageError) {
-        console.warn(`Warning: Could not extract text from page ${i}`);
-        continue;
-      }
-    }
-
-    if (!fullText || fullText.trim().length === 0) {
+    if (!data.text || data.text.trim().length === 0) {
       throw new Error('No text extracted from PDF');
     }
 
-    return fullText.trim();
+    return data.text.trim();
   } catch (error) {
     console.error('PDF parsing error:', error.message);
     throw new AppError(
