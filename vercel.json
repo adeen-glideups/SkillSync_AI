@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "prisma generate",
+  "buildCommand": "npx prisma generate",
   "builds": [
     {
       "src": "src/app.js",
