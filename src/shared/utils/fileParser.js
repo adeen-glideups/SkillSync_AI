@@ -1,5 +1,5 @@
 const mammoth = require('mammoth');
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse-new');
 const AppError = require('../middleware/errorHandler').AppError;
 
 console.log('✅ PDF and DOCX parsers loaded successfully');
