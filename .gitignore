@@ -3,3 +3,4 @@
 /.env
 .env
 src/config/firebase.json
+vercel.json
