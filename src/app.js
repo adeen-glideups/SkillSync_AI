@@ -31,6 +31,11 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Also respond to /api/health for convenience
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 // 🔥 GLOBAL BigInt JSON FIX
 BigInt.prototype.toJSON = function () {
   return this.toString();
@@ -55,7 +60,7 @@ console.log("ENV TEST:", {
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? "✅ LOADED" : "❌ MISSING",
 });
 
-// Start server
+// Start server (only for local development, not Vercel serverless)
 const startServer = async () => {
   try {
     await connectDatabase();
@@ -70,6 +75,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server if not in Vercel serverless environment
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 module.exports = app;

@@ -4,6 +4,7 @@
   "description": "Modular monolith Node.js backend with Prisma and MySQL",
   "main": "src/app.js",
   "scripts": {
+    "build": "prisma generate",
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "db:generate": "prisma generate",

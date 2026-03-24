@@ -3,7 +3,6 @@ const config = require('../../../config');
 const serviceAccount = config.firebase.serviceAccount;
 const { AppError } = require("../../../shared/middleware/errorHandler");
 const  ERROR_CODES  = require("../../../shared/constants/errorCodes");
-const { config } = require('dotenv');
 
 let firebaseInitialized = false;
 
@@ -12,6 +11,10 @@ let firebaseInitialized = false;
  */
 const initializeFirebase = () => {
   if (firebaseInitialized) return;
+
+  if (!serviceAccount) {
+    throw new AppError("Firebase service account not configured", 500, ERROR_CODES.SERVER_ERROR);
+  }
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

@@ -16,7 +16,9 @@ module.exports = {
     saltRounds: 10,
   },
   firebase: {
-    serviceAccount: JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT),
+    serviceAccount: process.env.FIREBASE_SERVICE_ACCOUNT
+      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+      : null,
   },
 
   email: {
