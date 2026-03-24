@@ -30,10 +30,13 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
     "path": "^0.12.7",
-    "pdfjs-dist": "^5.5.207"
+    "pdfjs-dist": "^5.5.207",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11",
-    "prisma": "^5.22.0"
+    "nodemon": "^3.1.11"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   }
 }
