@@ -4,21 +4,18 @@ const fs = require("fs");
 const { AppError } = require("../middleware/errorHandler");
 const ERROR_CODES = require("../constants/errorCodes");
 
-// Ensure upload directories exist
+// Ensure upload directories exist (lazy creation)
 const ensureDirectoryExists = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 };
 
-// Create upload directories
-const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+// Use /tmp on Vercel (read-only filesystem), local path otherwise
+const isVercel = process.env.VERCEL === "1";
+const uploadsDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "..", "..", "uploads");
 const profileDir = path.join(uploadsDir, "profile");
 const resumesDir = path.join(uploadsDir, "resumes");
-
-ensureDirectoryExists(uploadsDir);
-ensureDirectoryExists(profileDir);
-ensureDirectoryExists(resumesDir);
 
 // File filter - images only
 const imageFilter = (req, file, cb) => {
@@ -113,6 +110,7 @@ const handleMulterError = (uploadFunction) => {
 // Storage configuration for profile images
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
+    ensureDirectoryExists(profileDir);
     cb(null, profileDir);
   },
   filename: (req, file, cb) => {
@@ -135,6 +133,7 @@ const profileImageUpload = multer({
 // Storage configuration for resumes
 const resumeStorage = multer.diskStorage({
   destination: (req, file, cb) => {
+    ensureDirectoryExists(resumesDir);
     cb(null, resumesDir);
   },
   filename: (req, file, cb) => {
