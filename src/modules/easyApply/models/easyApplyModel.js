@@ -58,6 +58,12 @@ const findExistingApplication = (userId, jobId) =>
 const createApplication = (data) =>
   prisma.jobApplication.create({ data });
 
+const getUserEmailById = (userId) =>
+  prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+
 const getUserApplications = (userId) =>
   prisma.jobApplication.findMany({
     where: { userId },
@@ -83,5 +89,6 @@ module.exports = {
   getResumeById,
   findExistingApplication,
   createApplication,
+  getUserEmailById,
   getUserApplications,
 };

@@ -119,6 +119,12 @@ const getPrefillData = async (userId, userEmail, jobId) => {
   const job = await model.getJobById(jobId);
   if (!job) throw new AppError('Job not found', 404, 'JOB_NOT_FOUND');
 
+  let resolvedEmail = userEmail;
+  if (!resolvedEmail) {
+    const user = await model.getUserEmailById(userId);
+    resolvedEmail = user?.email || null;
+  }
+
   // Get user's resumes
   const resumes = await model.getUserResumes(userId);
 
@@ -146,7 +152,7 @@ const getPrefillData = async (userId, userEmail, jobId) => {
 
   return {
     contact: {
-      email: userEmail,
+      email: resolvedEmail,
       phone: contactInfo.phone,
       countryCode: contactInfo.countryCode,
       city: contactInfo.city,
