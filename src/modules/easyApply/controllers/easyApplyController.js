@@ -4,7 +4,7 @@ const service = require('../services/easyApplyService');
 
 const getPrefill = asyncHandler(async (req, res) => {
   const jobId = parseInt(req.params.jobId);
-  const data = await service.getPrefillData(req.user.userId, req.user.email, jobId);
+  const data = await service.getPrefillData(req.user.userId, null, jobId);
   sendSuccess(res, data, 'Prefill data fetched successfully');
 });
 
@@ -17,7 +17,7 @@ const submitApplication = asyncHandler(async (req, res) => {
   const jobId = parseInt(req.params.jobId);
   const result = await service.submitApplication(
     req.user.userId,
-    req.user.email,
+    null, // Email is not in JWT, will be fetched from DB in service
     jobId,
     req.body
   );

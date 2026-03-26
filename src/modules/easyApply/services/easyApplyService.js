@@ -195,7 +195,13 @@ const submitApplication = async (userId, userEmail, jobId, payload) => {
   if (existing) throw new AppError('You have already applied to this job', 409, 'ALREADY_APPLIED');
 
   // Fetch user name for email
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
+
+  // Resolve email: contact > userEmail > user table fallback
+  let resolvedEmail = contact.email || userEmail || user?.email;
+  if (!resolvedEmail) {
+    throw new AppError('No valid email found for application submission', 400, 'NO_EMAIL_PROVIDED');
+  }
 
   // Save application
   const application = await model.createApplication({
@@ -203,7 +209,7 @@ const submitApplication = async (userId, userEmail, jobId, payload) => {
     jobId,
     resumeId,
     contactSnapshot: {
-      email: contact.email || userEmail,
+      email: resolvedEmail,
       phone: contact.phone || null,
       countryCode: contact.countryCode || null,
       city: contact.city || null,
@@ -224,7 +230,7 @@ const submitApplication = async (userId, userEmail, jobId, payload) => {
   }
 
   // Send confirmation email
-  await sendApplicationEmail(userEmail, user?.name || 'User', job.title, job.company);
+  await sendApplicationEmail(resolvedEmail, user?.name || 'User', job.title, job.company);
 
   return {
     applicationId: application.id,
