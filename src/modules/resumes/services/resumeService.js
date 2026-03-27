@@ -71,6 +71,7 @@ const uploadResumeWithEmbedding = async (userId, file) => {
       fileName: file.originalname,
       originalText: resumeText,
       embedding,
+      fileUrl: file.cloudinaryUrl, // Cloudinary URL from uploadHelper
     });
 
     return resume;

@@ -12,11 +12,13 @@ const createResume = async (data) => {
       fileName: data.fileName,
       originalText: data.originalText,
       embedding: data.embedding,
+      fileUrl: data.fileUrl || null, // Optional Cloudinary URL
     },
     select: {
       id: true,
       userId: true,
       fileName: true,
+      fileUrl: true,
       uploadedAt: true,
     },
   });

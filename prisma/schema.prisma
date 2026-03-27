@@ -132,6 +132,7 @@ model UserResume {
   fileName     String    @db.VarChar(255)
   originalText String    @db.LongText
   embedding    Json      // 768-dimensional vector
+  fileUrl      String?   @db.Text // Cloudinary URL of the uploaded PDF/DOCX
 
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   matches      MatchResult[]
