@@ -30,9 +30,11 @@
     "mammoth": "^1.11.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+    "mysql2": "^3.22.0",
     "nodemailer": "^7.0.11",
     "path": "^0.12.7",
     "pdf-parse-new": "^2.0.0",
+    "pg": "^8.20.0",
     "prisma": "^5.22.0"
   },
   "devDependencies": {

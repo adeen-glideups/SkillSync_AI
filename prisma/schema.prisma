@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 //AUTH
@@ -92,7 +93,7 @@ model Job {
   company     String   @db.VarChar(255)
   
   // Content (what gets embedded)
-  description String   @db.LongText
+  description String   @db.Text
   tags        Json?    // ["React", "Node.js"] — stored as array
   
   // Location & Work Type  
@@ -130,7 +131,7 @@ model UserResume {
   id           Int       @id @default(autoincrement())
   userId       Int
   fileName     String    @db.VarChar(255)
-  originalText String    @db.LongText
+  originalText String    @db.Text
   embedding    Json      // 768-dimensional vector
   fileUrl      String?   @db.Text // Cloudinary URL of the uploaded PDF/DOCX
 
@@ -150,7 +151,7 @@ model MatchResult {
   resumeId         Int
   jobId            Int
   similarityScore  Float
-  explanation      String  @db.LongText
+  explanation      String  @db.Text
 
   user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   resume           UserResume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
